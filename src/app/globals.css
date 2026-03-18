@@ -1,26 +1,209 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════
+   Academic Parchment — Design Tokens
+   "Vol. I • № 1 • Lent Term, MMXXVI • Price: One's Dignity"
+   ═══════════════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* ── Palette ── */
+  --color-bg: #faf8f5;
+  --color-bg-card: #ffffff;
+  --color-text: #2c1810;
+  --color-text-muted: #8a7560;
+  --color-border: #d4c5b0;
+  --color-border-dark: #a89279;
+  --color-accent: #6b3a2a;
+  --color-accent-hover: #8b4a3a;
+  --color-highlight: #f0e8dc;
+
+  /* ── Typography ── */
+  --font-serif: Georgia, "Times New Roman", "Palatino Linotype", Palatino,
+    "Book Antiqua", serif;
+  --font-mono: "Courier New", Courier, monospace;
+
+  /* ── Spacing ── */
+  --content-max-width: 48rem;
+  --content-padding: 1.5rem;
+
+  /* ── Decorative ── */
+  --border-ruled: 3px double var(--color-border-dark);
+  --border-thin: 1px solid var(--color-border);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text);
+  --color-muted: var(--color-text-muted);
+  --color-card: var(--color-bg-card);
+  --color-border: var(--color-border);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-highlight: var(--color-highlight);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* ═══════════════════════════════════════════════════════════════════
+   Base Elements
+   ═══════════════════════════════════════════════════════════════════ */
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 2.25rem;
+}
+
+h2 {
+  font-size: 1.625rem;
+  font-variant: small-caps;
+  letter-spacing: 0.05em;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--color-accent-hover);
+}
+
+blockquote {
+  border-left: var(--border-ruled);
+  padding-left: var(--content-padding);
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin: 1.5rem 0;
+}
+
+hr {
+  border: none;
+  border-top: var(--border-ruled);
+  margin: 2rem 0;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background-color: var(--color-highlight);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   Utility Classes — Academic Styling
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Double-ruled border (top and bottom) */
+.academic-border {
+  border-top: var(--border-ruled);
+  border-bottom: var(--border-ruled);
+}
+
+/* Double-ruled border bottom only */
+.academic-border-bottom {
+  border-bottom: var(--border-ruled);
+}
+
+/* Double-ruled border top only */
+.academic-border-top {
+  border-top: var(--border-ruled);
+}
+
+/* Small-caps text */
+.small-caps {
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+}
+
+/* Fleuron (❧) — used as a decorative separator */
+.fleuron::before {
+  content: "❧";
+  display: block;
+  text-align: center;
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+  margin: 1rem 0;
+}
+
+/* Section mark (§) prefix */
+.section-mark::before {
+  content: "§ ";
+  color: var(--color-text-muted);
+}
+
+/* Muted scholarly text */
+.text-scholarly-muted {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+/* Card surface */
+.card-surface {
+  background-color: var(--color-bg-card);
+  border: var(--border-thin);
+  border-radius: 2px;
+}
+
+/* Parchment container — max-width content area */
+.parchment-container {
+  max-width: var(--content-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--content-padding);
+  padding-right: var(--content-padding);
+}
+
+/* Drop cap for opening paragraphs */
+.drop-cap::first-letter {
+  float: left;
+  font-size: 3.5em;
+  line-height: 0.8;
+  padding-right: 0.1em;
+  padding-top: 0.05em;
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+/* Masthead subtitle styling */
+.masthead-subtitle {
+  font-variant: small-caps;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+/* Thin decorative rule */
+.rule-thin {
+  border: none;
+  border-top: var(--border-thin);
 }
