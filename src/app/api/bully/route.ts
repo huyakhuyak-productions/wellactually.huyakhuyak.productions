@@ -22,8 +22,24 @@ const personas = [
 ];
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const { sentence, correct, wrong, mistakeCount, streak } = body;
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  const { sentence, correct, wrong, mistakeCount, streak } = body as {
+    sentence: string;
+    correct: string;
+    wrong: string;
+    mistakeCount: number;
+    streak: number;
+  };
+
+  if (!sentence || !correct || !wrong) {
+    return new Response("Missing required fields", { status: 400 });
+  }
 
   const persona = personas[Math.floor(Math.random() * personas.length)];
 

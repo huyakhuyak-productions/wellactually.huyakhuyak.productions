@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface BullyMessageProps {
   sentence: string;
@@ -19,12 +19,8 @@ export default function BullyMessage({
 }: BullyMessageProps) {
   const [text, setText] = useState("");
   const [error, setError] = useState(false);
-  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-
     const controller = new AbortController();
 
     async function fetchRoast() {
