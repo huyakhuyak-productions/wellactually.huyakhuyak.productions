@@ -159,7 +159,6 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
     setFeedback({ type: "none" });
     setSelectedAnswer(null);
     saveGame(newState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
 
   if (!gameState || !currentCardId) {
