@@ -12,6 +12,14 @@ interface GameCardProps {
 
 const keyLabels = ["1", "2", "3", "4"];
 
+const difficultyLabels: Record<Card["difficulty"], { label: string; className: string }> = {
+  1: { label: "Elementary", className: "text-[var(--color-text-muted)] border-[var(--color-border)]" },
+  2: { label: "Intermediate", className: "text-[var(--color-text-muted)] border-[var(--color-border)]" },
+  3: { label: "Advanced", className: "text-[var(--color-text-muted)] border-[var(--color-border-dark)]" },
+  4: { label: "Hard", className: "text-amber-800 border-amber-700 bg-amber-50" },
+  5: { label: "Fiendish", className: "text-red-800 border-red-700 bg-red-50" },
+};
+
 export default function GameCard({
   card,
   onAnswer,
@@ -44,12 +52,20 @@ export default function GameCard({
   }, [disabled, options, onAnswer]);
 
   const sentenceParts = card.sentence.split("____");
+  const diff = difficultyLabels[card.difficulty];
 
   return (
     <div className="card-surface p-6 sm:p-8 max-w-2xl mx-auto" role="region" aria-label="Question card">
-      <p className="text-xs small-caps tracking-widest text-[var(--color-text-muted)] mb-4">
-        The candidate shall complete the following
-      </p>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-xs small-caps tracking-widest text-[var(--color-text-muted)]">
+          The candidate shall complete the following
+        </p>
+        <span
+          className={`text-[0.6rem] small-caps tracking-[0.15em] px-2 py-0.5 border rounded-sm ${diff.className}`}
+        >
+          {diff.label}
+        </span>
+      </div>
 
       <p className="text-lg sm:text-xl leading-relaxed mb-6 sm:mb-8 text-center">
         {sentenceParts[0]}

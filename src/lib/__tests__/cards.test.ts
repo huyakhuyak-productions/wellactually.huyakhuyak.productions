@@ -33,14 +33,21 @@ describe("card data integrity", () => {
     }
   });
 
-  test("difficulty is 1, 2, or 3", () => {
+  test("difficulty is 1, 2, 3, 4, or 5", () => {
     for (const card of prepositionCards) {
-      expect([1, 2, 3]).toContain(card.difficulty);
+      expect([1, 2, 3, 4, 5]).toContain(card.difficulty);
     }
   });
 
-  test("has the expected number of cards", () => {
-    expect(prepositionCards.length).toBe(300);
+  test("has at least 300 cards", () => {
+    expect(prepositionCards.length).toBeGreaterThanOrEqual(300);
+  });
+
+  test("includes hard (4) and extra hard (5) cards", () => {
+    const hard = prepositionCards.filter((c) => c.difficulty === 4);
+    const extraHard = prepositionCards.filter((c) => c.difficulty === 5);
+    expect(hard.length).toBeGreaterThan(0);
+    expect(extraHard.length).toBeGreaterThan(0);
   });
 
   test("all cards have non-empty explanations", () => {

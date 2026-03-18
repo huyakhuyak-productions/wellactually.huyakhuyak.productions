@@ -4,7 +4,7 @@ export interface Card {
   correct: string; // "upon"
   distractors: string[]; // ["on", "at", "for"]
   explanation: string; // Brief explanation of why the correct answer is correct
-  difficulty: 1 | 2 | 3;
+  difficulty: 1 | 2 | 3 | 4 | 5;
 }
 
 export interface Topic {
