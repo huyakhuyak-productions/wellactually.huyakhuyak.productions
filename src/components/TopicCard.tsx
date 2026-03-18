@@ -13,7 +13,7 @@ export default function TopicCard({ topic }: { topic: Topic }) {
           {topic.description}
         </p>
         <p className="text-xs small-caps tracking-widest text-[var(--color-text-muted)]">
-          — Forthcoming —
+          — The Governors Are Interviewing Tutors —
         </p>
       </div>
     );
@@ -34,7 +34,7 @@ export default function TopicCard({ topic }: { topic: Topic }) {
         {topic.description}
       </p>
       <p className="text-xs small-caps tracking-widest text-[var(--color-accent)]">
-        Begin Examination →
+        Sit the Examination →
       </p>
     </Link>
   );

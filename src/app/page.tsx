@@ -8,17 +8,30 @@ export default function Home() {
       <Header />
 
       <main className="parchment-container py-10 flex-1">
-        <div className="text-center mb-10">
+        <div className="text-center mb-12">
+          <p className="text-xs small-caps tracking-[0.25em] text-[var(--color-text-muted)] mb-6">
+            A Foreword from the Editors
+          </p>
           <p className="drop-cap text-lg leading-relaxed max-w-2xl mx-auto">
-            One observes, with no small measure of dismay, that the English
-            language is under siege. Not from without — no, the threat is
-            decidedly domestic. Herein, we propose a remedy: rigorous,
-            repetitive, and utterly merciless examination of one&rsquo;s
-            grammatical competence.
+            One observes, with a weariness bordering on the existential, that
+            the English language is in a state of quite advanced decomposition.
+            The culprits are not, as one might charitably suppose, foreign
+            influences — no, the rot is entirely homegrown. We have therefore
+            taken it upon ourselves, at considerable personal inconvenience, to
+            construct a programme of remedial correction for those who persist in
+            treating prepositions as though they were interchangeable seasoning.
           </p>
           <div className="fleuron" />
-          <p className="text-sm italic text-[var(--color-text-muted)]">
-            Select a topic below and prepare to be humbled.
+          <p className="text-sm italic text-[var(--color-text-muted)] max-w-lg mx-auto">
+            You are not here because you are good at English. You are here
+            because someone, at some point, failed you — and we intend to
+            rectify the matter with all the gentleness of a Latin exam.
+          </p>
+        </div>
+
+        <div className="text-center mb-6">
+          <p className="text-xs small-caps tracking-[0.25em] text-[var(--color-text-muted)]">
+            § — Syllabus — §
           </p>
         </div>
 
@@ -28,13 +41,18 @@ export default function Home() {
           ))}
         </div>
 
-        <footer className="mt-16 text-center">
+        <footer className="mt-20 text-center">
           <hr className="rule-thin max-w-xs mx-auto mb-6" />
-          <p className="text-xs text-[var(--color-text-muted)] small-caps tracking-widest">
+          <p className="text-[0.65rem] text-[var(--color-text-muted)] small-caps tracking-[0.2em] mb-2">
             A Huyakhuyak Productions Endeavour
           </p>
-          <p className="text-xs text-[var(--color-text-muted)] mt-1">
-            ❧ Published for the Betterment of the English-Speaking World ❧
+          <p className="text-[0.65rem] text-[var(--color-text-muted)] italic max-w-sm mx-auto">
+            Published for the Betterment of the English-Speaking World, whether
+            it wishes to be bettered or not.
+          </p>
+          <p className="text-[var(--color-text-muted)] mt-3 text-sm">❧</p>
+          <p className="text-[0.6rem] text-[var(--color-text-muted)] tracking-widest mt-1">
+            MMXXVI&ensp;•&ensp;ALL WRONGS RESERVED
           </p>
         </footer>
       </main>

@@ -211,7 +211,7 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
             onClick={handleNext}
             className="py-3 px-8 border-2 border-[var(--color-border-dark)] text-sm small-caps tracking-widest hover:bg-[var(--color-highlight)] transition-colors cursor-pointer"
           >
-            Next Question →
+            Proceed to Next Question →
           </button>
         </div>
       )}
@@ -221,7 +221,7 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
           onClick={handleReset}
           className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors cursor-pointer underline"
         >
-          Begin anew (reset progress)
+          Withdraw from examination &amp; begin afresh
         </button>
       </div>
     </div>

@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Well, Actually.",
   description:
-    "A pedantic and irrefutably correct guide to the proper use of the English language, presented with the gentle patience of a disappointed headmaster.",
+    "The Quarterly Journal of Unsolicited Correction. A pedantic, irrefutably correct, and entirely unasked-for guide to the proper use of the English language, administered with the gentle patience of a disappointed headmaster who has seen rather too many finals papers.",
 };
 
 export default function RootLayout({

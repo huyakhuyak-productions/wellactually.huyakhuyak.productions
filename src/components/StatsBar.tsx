@@ -18,30 +18,30 @@ export default function StatsBar({
   penaltyCount,
 }: StatsBarProps) {
   return (
-    <div className="academic-border py-3 px-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-xs small-caps tracking-widest text-[var(--color-text-muted)]">
+    <div className="academic-border py-3 px-4 flex flex-wrap justify-center gap-x-6 gap-y-1 text-[0.65rem] small-caps tracking-[0.15em] text-[var(--color-text-muted)]">
       <span>
-        Streak:{" "}
+        Consecutive Adequacies:{" "}
         <strong className="text-[var(--color-text)]">{streak}</strong>
       </span>
       <span>
-        Best:{" "}
+        Personal Best:{" "}
         <strong className="text-[var(--color-text)]">{bestStreak}</strong>
       </span>
       <span>
-        Correct:{" "}
+        Marks:{" "}
         <strong className="text-[var(--color-text)]">{totalCorrect}</strong>
       </span>
       <span>
-        Blunders:{" "}
+        Disgraces:{" "}
         <strong className="text-[var(--color-accent)]">{totalWrong}</strong>
       </span>
       <span>
-        Remaining:{" "}
+        Papers Remaining:{" "}
         <strong className="text-[var(--color-text)]">{remaining}</strong>
       </span>
       {penaltyCount > 0 && (
         <span>
-          Penalty Box:{" "}
+          In Detention:{" "}
           <strong className="text-[var(--color-accent)]">
             {penaltyCount}
           </strong>

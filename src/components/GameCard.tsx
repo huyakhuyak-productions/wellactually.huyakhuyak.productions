@@ -48,7 +48,7 @@ export default function GameCard({
   return (
     <div className="card-surface p-6 sm:p-8 max-w-2xl mx-auto" role="region" aria-label="Question card">
       <p className="text-xs small-caps tracking-widest text-[var(--color-text-muted)] mb-4">
-        Complete the sentence
+        The candidate shall complete the following
       </p>
 
       <p className="text-lg sm:text-xl leading-relaxed mb-6 sm:mb-8 text-center">
