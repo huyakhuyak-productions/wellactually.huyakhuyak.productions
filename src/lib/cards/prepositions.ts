@@ -10,6 +10,9 @@ import { prepositionsDuration } from "./prepositions-duration";
 import { prepositionsComparison } from "./prepositions-comparison";
 import { prepositionsDependent } from "./prepositions-dependent";
 import { prepositionsIdiomatic } from "./prepositions-idiomatic";
+import { prepositionsAcademic } from "./prepositions-academic";
+import { prepositionsPossession } from "./prepositions-possession";
+import { prepositionsConcession } from "./prepositions-concession";
 
 export const prepositionCards: Card[] = [
   ...prepositionsTime,
@@ -22,4 +25,7 @@ export const prepositionCards: Card[] = [
   ...prepositionsComparison,
   ...prepositionsDependent,
   ...prepositionsIdiomatic,
+  ...prepositionsAcademic,
+  ...prepositionsPossession,
+  ...prepositionsConcession,
 ];
