@@ -37,18 +37,8 @@ export default async function PlayPage({ params }: Props) {
 
   return (
     <>
-      <Header />
-      <main className="parchment-container py-8 flex-1">
-        <div className="text-center mb-8">
-          <p className="small-caps text-xs tracking-[0.25em] text-[var(--color-text-muted)] mb-1">
-            {topic.subtitle}
-          </p>
-          <h2 className="text-2xl font-bold">{topic.title}</h2>
-          <p className="text-[0.6rem] tracking-[0.15em] text-[var(--color-text-muted)] mt-2 uppercase">
-            Candidates are reminded that all answers are final and excuses will not be entertained
-          </p>
-        </div>
-
+      <Header compact />
+      <main className="parchment-container py-4 flex-1">
         <Game topicId={topicId} cards={cards} />
       </main>
     </>

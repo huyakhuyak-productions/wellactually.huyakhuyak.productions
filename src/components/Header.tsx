@@ -1,6 +1,20 @@
 import Link from "next/link";
 
-export default function Header() {
+export default function Header({ compact = false }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <header className="academic-border-bottom py-3">
+        <div className="parchment-container text-center">
+          <Link href="/" className="!no-underline">
+            <span className="text-lg font-bold tracking-tight text-[var(--color-text)] italic">
+              Well, Actually.
+            </span>
+          </Link>
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="academic-border-bottom py-6">
       <div className="parchment-container text-center">
