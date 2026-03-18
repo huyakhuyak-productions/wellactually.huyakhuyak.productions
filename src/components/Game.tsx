@@ -27,17 +27,43 @@ type FeedbackState =
       streak: number;
     };
 
-export default function Game({ topicId, cards: initialCards }: GameProps) {
-  const [gameState, setGameState] = useState<GameState | null>(null);
-  const [currentCardId, setCurrentCardId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<FeedbackState>({ type: "none" });
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const initializedRef = useRef(false);
-  const fetchingCardsRef = useRef(false);
+function initializeGame(topicId: string, allCardIds: string[]): { state: GameState; cardId: string } {
+  let state: GameState | null = null;
 
-  const cardsRef = useRef(initialCards);
+  try {
+    state = loadGame(topicId);
+  } catch {
+    // Corrupted localStorage — start fresh
+  }
+
+  // Validate loaded state has a non-empty deck with valid IDs
+  if (state && state.deck.length === 0 && Object.keys(state.penaltyBox).length === 0) {
+    state = null;
+  }
+
+  if (!state) {
+    state = initGame(topicId, allCardIds);
+  }
+
+  const [cardId, newState] = drawCard(state, allCardIds);
+  saveGame(newState);
+  return { state: newState, cardId };
+}
+
+export default function Game({ topicId, cards: initialCards }: GameProps) {
   const cardMapRef = useRef(new Map(initialCards.map((c) => [c.id, c])));
   const allCardIdsRef = useRef(initialCards.map((c) => c.id));
+  const fetchingCardsRef = useRef(false);
+
+  // Initialize synchronously — no useEffect delay
+  const [{ state: initialState, cardId: initialCardId }] = useState(() =>
+    initializeGame(topicId, allCardIdsRef.current),
+  );
+
+  const [gameState, setGameState] = useState<GameState>(initialState);
+  const [currentCardId, setCurrentCardId] = useState<string>(initialCardId);
+  const [feedback, setFeedback] = useState<FeedbackState>({ type: "none" });
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
   // Fetch new AI-generated cards when the deck is getting low
   const maybeGenerateCards = useCallback(async (deckLength: number) => {
@@ -60,10 +86,8 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
       };
       if (!newCards?.length) return;
 
-      // Add new cards to the pool
       for (const card of newCards) {
         if (!cardMapRef.current.has(card.id)) {
-          cardsRef.current.push(card);
           cardMapRef.current.set(card.id, card);
           allCardIdsRef.current.push(card.id);
         }
@@ -75,26 +99,9 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
     }
   }, []);
 
-  // Initialize game on mount
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
-    let state = loadGame(topicId);
-    if (!state) {
-      state = initGame(topicId, allCardIdsRef.current);
-    }
-
-    const [cardId, newState] = drawCard(state, allCardIdsRef.current);
-    setGameState(newState);
-    setCurrentCardId(cardId);
-    saveGame(newState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleAnswer = useCallback(
     (answer: string) => {
-      if (!gameState || !currentCardId || selectedAnswer) return;
+      if (!currentCardId || selectedAnswer) return;
 
       const card = cardMapRef.current.get(currentCardId);
       if (!card) return;
@@ -106,7 +113,6 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
       setGameState(newState);
       saveGame(newState);
 
-      // Try to generate more cards when deck is getting low
       maybeGenerateCards(newState.deck.length);
 
       if (isCorrect) {
@@ -126,8 +132,6 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
   );
 
   const handleNext = useCallback(() => {
-    if (!gameState) return;
-
     const [cardId, newState] = drawCard(gameState, allCardIdsRef.current);
     setGameState(newState);
     setCurrentCardId(cardId);
@@ -161,18 +165,31 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
     saveGame(newState);
   }, [topicId]);
 
-  if (!gameState || !currentCardId) {
+  const currentCard = cardMapRef.current.get(currentCardId);
+  if (!currentCard) {
+    // Card ID from saved state no longer exists — reset game
+    const state = initGame(topicId, allCardIdsRef.current);
+    const [cardId, newState] = drawCard(state, allCardIdsRef.current);
     return (
       <div className="text-center py-20">
-        <p className="text-[var(--color-text-muted)] italic animate-pulse">
-          The examiner shuffles the papers…
+        <p className="text-[var(--color-text-muted)] italic">
+          The examiner discovers outdated papers and fetches new ones…
         </p>
+        <button
+          onClick={() => {
+            setGameState(newState);
+            setCurrentCardId(cardId);
+            setFeedback({ type: "none" });
+            setSelectedAnswer(null);
+            saveGame(newState);
+          }}
+          className="mt-4 py-2 px-6 border-2 border-[var(--color-border-dark)] text-sm small-caps tracking-widest hover:bg-[var(--color-highlight)] transition-colors cursor-pointer"
+        >
+          Begin Afresh
+        </button>
       </div>
     );
   }
-
-  const currentCard = cardMapRef.current.get(currentCardId);
-  if (!currentCard) return null;
 
   return (
     <div className="space-y-6">
