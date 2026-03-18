@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { Card, GameState } from "@/lib/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { Card } from "@/lib/types";
 import { initGame, drawCard, answerCard } from "@/lib/engine";
-import { saveGame, loadGame } from "@/lib/storage";
+import { saveGame, loadGame, clearGame } from "@/lib/storage";
 import { getRandomPraise } from "@/lib/praise";
 import GameCard from "./GameCard";
 import BullyMessage from "./BullyMessage";
@@ -27,93 +27,99 @@ type FeedbackState =
       streak: number;
     };
 
-function initializeGame(topicId: string, allCardIds: string[]): { state: GameState; cardId: string } {
-  let state: GameState | null = null;
+type GameData = {
+  state: ReturnType<typeof initGame>;
+  cardId: string;
+};
 
-  try {
-    state = loadGame(topicId);
-  } catch {
-    // Corrupted localStorage — start fresh
-  }
-
-  // Validate loaded state has a non-empty deck with valid IDs
-  if (state && state.deck.length === 0 && Object.keys(state.penaltyBox).length === 0) {
-    state = null;
-  }
-
-  if (!state) {
-    state = initGame(topicId, allCardIds);
-  }
-
-  const [cardId, newState] = drawCard(state, allCardIds);
-  saveGame(newState);
-  return { state: newState, cardId };
-}
-
-export default function Game({ topicId, cards: initialCards }: GameProps) {
-  const cardMapRef = useRef(new Map(initialCards.map((c) => [c.id, c])));
-  const allCardIdsRef = useRef(initialCards.map((c) => c.id));
-  const fetchingCardsRef = useRef(false);
-
-  // Initialize synchronously — no useEffect delay
-  const [{ state: initialState, cardId: initialCardId }] = useState(() =>
-    initializeGame(topicId, allCardIdsRef.current),
+export default function Game({ topicId, cards }: GameProps) {
+  const cardMap = useMemo(
+    () => new Map(cards.map((c) => [c.id, c])),
+    [cards],
   );
+  const allCardIds = useMemo(() => cards.map((c) => c.id), [cards]);
 
-  const [gameState, setGameState] = useState<GameState>(initialState);
-  const [currentCardId, setCurrentCardId] = useState<string>(initialCardId);
+  // Lazy init: loads from localStorage or creates fresh game with shuffled deck.
+  const [game, setGame] = useState<GameData>(() => {
+    const validIds = new Set(allCardIds);
+    let state = loadGame(topicId);
+
+    if (state) {
+      const stale = state.deck.some((id) => !validIds.has(id));
+      const empty =
+        state.deck.length === 0 &&
+        Object.keys(state.penaltyBox).length === 0;
+      if (stale || empty) {
+        clearGame(topicId);
+        state = null;
+      }
+    }
+
+    if (!state) {
+      state = initGame(topicId, allCardIds);
+    }
+
+    const [cardId, drawn] = drawCard(state, allCardIds);
+    saveGame(drawn);
+    return { state: drawn, cardId };
+  });
+
   const [feedback, setFeedback] = useState<FeedbackState>({ type: "none" });
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
 
-  // Fetch new AI-generated cards when the deck is getting low
-  const maybeGenerateCards = useCallback(async (deckLength: number) => {
-    if (fetchingCardsRef.current || deckLength > 10) return;
-    fetchingCardsRef.current = true;
+  const advance = useCallback(() => {
+    const [cardId, newState] = drawCard(game.state, allCardIds);
+    setGame({ state: newState, cardId });
+    setFeedback({ type: "none" });
+    setSelectedAnswer(null);
+    saveGame(newState);
+  }, [game.state, allCardIds]);
 
-    try {
-      const response = await fetch("/api/generate-card", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          existingIds: allCardIdsRef.current,
-        }),
-      });
+  const reset = useCallback(() => {
+    clearGame(topicId);
+    const fresh = initGame(topicId, allCardIds);
+    const [cardId, newState] = drawCard(fresh, allCardIds);
+    setGame({ state: newState, cardId });
+    setFeedback({ type: "none" });
+    setSelectedAnswer(null);
+    saveGame(newState);
+  }, [topicId, allCardIds]);
 
-      if (!response.ok) return;
-
-      const { cards: newCards } = (await response.json()) as {
-        cards: Card[];
-      };
-      if (!newCards?.length) return;
-
-      for (const card of newCards) {
-        if (!cardMapRef.current.has(card.id)) {
-          cardMapRef.current.set(card.id, card);
-          allCardIdsRef.current.push(card.id);
-        }
-      }
-    } catch {
-      // Silently fail — AI generation is a nice-to-have
-    } finally {
-      fetchingCardsRef.current = false;
-    }
-  }, []);
-
-  const handleAnswer = useCallback(
-    (answer: string) => {
-      if (!currentCardId || selectedAnswer) return;
-
-      const card = cardMapRef.current.get(currentCardId);
+  const answer = useCallback(
+    (choice: string) => {
+      if (selectedAnswer) return;
+      const card = cardMap.get(game.cardId);
       if (!card) return;
 
-      const isCorrect = answer === card.correct;
-      setSelectedAnswer(answer);
+      const isCorrect = choice === card.correct;
+      setSelectedAnswer(choice);
 
-      const newState = answerCard(gameState, currentCardId, isCorrect);
-      setGameState(newState);
+      const newState = answerCard(game.state, game.cardId, isCorrect);
+      setGame((g) => ({ ...g, state: newState }));
       saveGame(newState);
 
-      maybeGenerateCards(newState.deck.length);
+      if (!fetchingRef.current && newState.deck.length < 10) {
+        fetchingRef.current = true;
+        fetch("/api/generate-card", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ existingIds: allCardIds }),
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            if (data?.cards) {
+              for (const c of data.cards as Card[]) {
+                if (!cardMap.has(c.id)) {
+                  cardMap.set(c.id, c);
+                  allCardIds.push(c.id);
+                }
+              }
+            }
+          })
+          .catch(() => {})
+          .finally(() => { fetchingRef.current = false; });
+      }
 
       if (isCorrect) {
         setFeedback({ type: "correct", message: getRandomPraise() });
@@ -122,89 +128,47 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
           type: "wrong",
           sentence: card.sentence,
           correct: card.correct,
-          wrong: answer,
+          wrong: choice,
           mistakeCount: newState.stats.totalWrong,
-          streak: gameState.stats.streak,
+          streak: game.state.stats.streak,
         });
       }
     },
-    [gameState, currentCardId, selectedAnswer, maybeGenerateCards],
+    [game, selectedAnswer, cardMap, allCardIds],
   );
 
-  const handleNext = useCallback(() => {
-    const [cardId, newState] = drawCard(gameState, allCardIdsRef.current);
-    setGameState(newState);
-    setCurrentCardId(cardId);
-    setFeedback({ type: "none" });
-    setSelectedAnswer(null);
-    saveGame(newState);
-  }, [gameState]);
-
-  // Keyboard shortcut: Enter or Space to advance
   useEffect(() => {
     if (!selectedAnswer) return;
-
-    function handleKeyDown(e: KeyboardEvent) {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        handleNext();
+        advance();
       }
-    }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedAnswer, advance]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedAnswer, handleNext]);
-
-  const handleReset = useCallback(() => {
-    const state = initGame(topicId, allCardIdsRef.current);
-    const [cardId, newState] = drawCard(state, allCardIdsRef.current);
-    setGameState(newState);
-    setCurrentCardId(cardId);
-    setFeedback({ type: "none" });
-    setSelectedAnswer(null);
-    saveGame(newState);
-  }, [topicId]);
-
-  const currentCard = cardMapRef.current.get(currentCardId);
+  const currentCard = cardMap.get(game.cardId);
   if (!currentCard) {
-    // Card ID from saved state no longer exists — reset game
-    const state = initGame(topicId, allCardIdsRef.current);
-    const [cardId, newState] = drawCard(state, allCardIdsRef.current);
-    return (
-      <div className="text-center py-20">
-        <p className="text-[var(--color-text-muted)] italic">
-          The examiner discovers outdated papers and fetches new ones…
-        </p>
-        <button
-          onClick={() => {
-            setGameState(newState);
-            setCurrentCardId(cardId);
-            setFeedback({ type: "none" });
-            setSelectedAnswer(null);
-            saveGame(newState);
-          }}
-          className="mt-4 py-2 px-6 border-2 border-[var(--color-border-dark)] text-sm small-caps tracking-widest hover:bg-[var(--color-highlight)] transition-colors cursor-pointer"
-        >
-          Begin Afresh
-        </button>
-      </div>
-    );
+    reset();
+    return null;
   }
 
   return (
     <div className="space-y-6">
       <StatsBar
-        streak={gameState.stats.streak}
-        bestStreak={gameState.stats.bestStreak}
-        totalCorrect={gameState.stats.totalCorrect}
-        totalWrong={gameState.stats.totalWrong}
-        remaining={gameState.deck.length}
-        penaltyCount={Object.keys(gameState.penaltyBox).length}
+        streak={game.state.stats.streak}
+        bestStreak={game.state.stats.bestStreak}
+        totalCorrect={game.state.stats.totalCorrect}
+        totalWrong={game.state.stats.totalWrong}
+        remaining={game.state.deck.length}
+        penaltyCount={Object.keys(game.state.penaltyBox).length}
       />
 
       <GameCard
         card={currentCard}
-        onAnswer={handleAnswer}
+        onAnswer={answer}
         disabled={selectedAnswer !== null}
         selectedAnswer={selectedAnswer}
       />
@@ -225,7 +189,7 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
       {selectedAnswer && (
         <div className="text-center">
           <button
-            onClick={handleNext}
+            onClick={advance}
             className="py-3 px-8 border-2 border-[var(--color-border-dark)] text-sm small-caps tracking-widest hover:bg-[var(--color-highlight)] transition-colors cursor-pointer"
           >
             Proceed to Next Question →
@@ -235,7 +199,7 @@ export default function Game({ topicId, cards: initialCards }: GameProps) {
 
       <div className="text-center pt-4">
         <button
-          onClick={handleReset}
+          onClick={reset}
           className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors cursor-pointer underline"
         >
           Withdraw from examination &amp; begin afresh
