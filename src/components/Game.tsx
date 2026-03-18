@@ -27,15 +27,53 @@ type FeedbackState =
       streak: number;
     };
 
-export default function Game({ topicId, cards }: GameProps) {
+export default function Game({ topicId, cards: initialCards }: GameProps) {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [currentCardId, setCurrentCardId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState>({ type: "none" });
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const initializedRef = useRef(false);
+  const fetchingCardsRef = useRef(false);
 
-  const allCardIds = cards.map((c) => c.id);
-  const cardMap = useRef(new Map(cards.map((c) => [c.id, c])));
+  const cardsRef = useRef(initialCards);
+  const cardMapRef = useRef(new Map(initialCards.map((c) => [c.id, c])));
+  const allCardIdsRef = useRef(initialCards.map((c) => c.id));
+
+  // Fetch new AI-generated cards when the deck is getting low
+  const maybeGenerateCards = useCallback(async (deckLength: number) => {
+    if (fetchingCardsRef.current || deckLength > 10) return;
+    fetchingCardsRef.current = true;
+
+    try {
+      const response = await fetch("/api/generate-card", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          existingIds: allCardIdsRef.current,
+        }),
+      });
+
+      if (!response.ok) return;
+
+      const { cards: newCards } = (await response.json()) as {
+        cards: Card[];
+      };
+      if (!newCards?.length) return;
+
+      // Add new cards to the pool
+      for (const card of newCards) {
+        if (!cardMapRef.current.has(card.id)) {
+          cardsRef.current.push(card);
+          cardMapRef.current.set(card.id, card);
+          allCardIdsRef.current.push(card.id);
+        }
+      }
+    } catch {
+      // Silently fail — AI generation is a nice-to-have
+    } finally {
+      fetchingCardsRef.current = false;
+    }
+  }, []);
 
   // Initialize game on mount
   useEffect(() => {
@@ -44,10 +82,10 @@ export default function Game({ topicId, cards }: GameProps) {
 
     let state = loadGame(topicId);
     if (!state) {
-      state = initGame(topicId, allCardIds);
+      state = initGame(topicId, allCardIdsRef.current);
     }
 
-    const [cardId, newState] = drawCard(state, allCardIds);
+    const [cardId, newState] = drawCard(state, allCardIdsRef.current);
     setGameState(newState);
     setCurrentCardId(cardId);
     saveGame(newState);
@@ -58,7 +96,7 @@ export default function Game({ topicId, cards }: GameProps) {
     (answer: string) => {
       if (!gameState || !currentCardId || selectedAnswer) return;
 
-      const card = cardMap.current.get(currentCardId);
+      const card = cardMapRef.current.get(currentCardId);
       if (!card) return;
 
       const isCorrect = answer === card.correct;
@@ -67,6 +105,9 @@ export default function Game({ topicId, cards }: GameProps) {
       const newState = answerCard(gameState, currentCardId, isCorrect);
       setGameState(newState);
       saveGame(newState);
+
+      // Try to generate more cards when deck is getting low
+      maybeGenerateCards(newState.deck.length);
 
       if (isCorrect) {
         setFeedback({ type: "correct", message: getRandomPraise() });
@@ -81,24 +122,38 @@ export default function Game({ topicId, cards }: GameProps) {
         });
       }
     },
-    [gameState, currentCardId, selectedAnswer],
+    [gameState, currentCardId, selectedAnswer, maybeGenerateCards],
   );
 
   const handleNext = useCallback(() => {
     if (!gameState) return;
 
-    const [cardId, newState] = drawCard(gameState, allCardIds);
+    const [cardId, newState] = drawCard(gameState, allCardIdsRef.current);
     setGameState(newState);
     setCurrentCardId(cardId);
     setFeedback({ type: "none" });
     setSelectedAnswer(null);
     saveGame(newState);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
 
+  // Keyboard shortcut: Enter or Space to advance
+  useEffect(() => {
+    if (!selectedAnswer) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleNext();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedAnswer, handleNext]);
+
   const handleReset = useCallback(() => {
-    const state = initGame(topicId, allCardIds);
-    const [cardId, newState] = drawCard(state, allCardIds);
+    const state = initGame(topicId, allCardIdsRef.current);
+    const [cardId, newState] = drawCard(state, allCardIdsRef.current);
     setGameState(newState);
     setCurrentCardId(cardId);
     setFeedback({ type: "none" });
@@ -117,7 +172,7 @@ export default function Game({ topicId, cards }: GameProps) {
     );
   }
 
-  const currentCard = cardMap.current.get(currentCardId);
+  const currentCard = cardMapRef.current.get(currentCardId);
   if (!currentCard) return null;
 
   return (
