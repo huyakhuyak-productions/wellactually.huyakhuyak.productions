@@ -1,5 +1,3 @@
-"use client";
-
 interface StatsBarProps {
   streak: number;
   bestStreak: number;

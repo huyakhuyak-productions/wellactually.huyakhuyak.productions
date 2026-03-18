@@ -85,7 +85,7 @@ export default function GameCard({
 
           return (
             <button
-              key={option}
+              key={i}
               onClick={() => onAnswer(option)}
               disabled={disabled}
               className={buttonClass}

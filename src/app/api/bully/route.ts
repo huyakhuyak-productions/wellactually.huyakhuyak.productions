@@ -1,10 +1,5 @@
 import { streamText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
-
-const openrouter = createOpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+import { openrouter } from "@/lib/openrouter";
 
 const personas = [
   {
@@ -29,13 +24,11 @@ export async function POST(request: Request) {
     return new Response("Invalid JSON body", { status: 400 });
   }
 
-  const { sentence, correct, wrong, mistakeCount, streak } = body as {
-    sentence: string;
-    correct: string;
-    wrong: string;
-    mistakeCount: number;
-    streak: number;
-  };
+  const sentence = String(body.sentence ?? "");
+  const correct = String(body.correct ?? "");
+  const wrong = String(body.wrong ?? "");
+  const mistakeCount = Math.min(Math.max(Number(body.mistakeCount) || 0, 0), 999);
+  const streak = Math.min(Math.max(Number(body.streak) || 0, 0), 999);
 
   if (!sentence || !correct || !wrong) {
     return new Response("Missing required fields", { status: 400 });

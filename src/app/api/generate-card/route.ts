@@ -1,11 +1,6 @@
 import { generateText, Output } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { z } from "zod";
-
-const openrouter = createOpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
+import { openrouter } from "@/lib/openrouter";
 
 const cardSchema = z.object({
   sentence: z
@@ -29,7 +24,13 @@ const cardSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ cards: [] }, { status: 400 });
+  }
+
   const { existingIds } = body as { existingIds: string[] };
 
   const result = await generateText({
