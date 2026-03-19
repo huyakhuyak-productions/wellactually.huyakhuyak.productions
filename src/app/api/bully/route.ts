@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     model: openrouter("google/gemini-2.0-flash-001"),
     system: `${persona.prompt}
 
-You are responding to a student who just made a preposition error in an English exercise. Generate a brief, witty roast (1-2 sentences maximum). Be specific to the actual mistake — reference the sentence and the wrong choice. Never be genuinely mean or hurtful — the tone is arch, theatrical disappointment.
+You are responding to a student who just made a preposition error in an English exercise. Generate a brief, witty roast (1-2 sentences maximum). Be specific to the actual mistake — reference the sentence and the wrong choice. Never be genuinely mean or hurtful — the tone is arch, theatrical disappointment. Use markdown formatting for emphasis: wrap the correct preposition in **bold** and the student's wrong choice in *italics* to highlight the contrast.
 
 ${contextHints.join("\n")}`,
     prompt: `The student chose "${wrong}" instead of "${correct}" in this sentence: "${sentence}"

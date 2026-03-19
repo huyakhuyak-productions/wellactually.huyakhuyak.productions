@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface BullyMessageProps {
   sentence: string;
@@ -81,7 +82,25 @@ export default function BullyMessage({
 
   return (
     <div className="text-center py-4 animate-fade-in">
-      <p className="text-lg italic text-[var(--color-accent)]">{text}</p>
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => (
+            <p className="text-lg italic text-[var(--color-accent)]">
+              {children}
+            </p>
+          ),
+          strong: ({ children }) => (
+            <strong className="font-bold not-italic">{children}</strong>
+          ),
+          em: ({ children }) => (
+            <em className="not-italic underline decoration-[var(--color-border-dark)] underline-offset-2">
+              {children}
+            </em>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
     </div>
   );
 }
