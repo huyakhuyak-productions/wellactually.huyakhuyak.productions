@@ -54,6 +54,14 @@ export default function Home() {
           <p className="text-[0.6rem] text-[var(--color-text-muted)] tracking-widest mt-1">
             MMXXVI&ensp;•&ensp;ALL WRONGS RESERVED
           </p>
+          <a
+            href="https://github.com/huyakhuyak-productions/wellactually.huyakhuyak.productions"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-3 text-[0.6rem] text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors tracking-widest"
+          >
+            GitHub
+          </a>
         </footer>
       </main>
     </>
