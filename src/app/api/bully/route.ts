@@ -70,18 +70,7 @@ export async function POST(request: Request) {
     model: openrouter("anthropic/claude-opus-4.6"),
     system: `${persona.prompt}
 
-You are responding to a student who just made a preposition error in an English exercise.
-
-RULES:
-- ONE sentence only. Maximum 25 words. No exceptions.
-- NEVER start with "To suggest" or "To [verb]" — vary your openings every time.
-- Be specific: mention the wrong choice and the correct one.
-- Be FUNNY — vivid analogies, absurd comparisons, unexpected punchlines. British sitcom one-liner energy.
-- Pedantry so extreme it becomes ironic — parody of snobbery, not genuine cruelty.
-- Use markdown: **bold** for the correct preposition, *italics* for the wrong one.
-- No parenthetical stage directions like "(Sighs)" — speak directly.
-- No obscure vocabulary — every word clear from context. Humour lands immediately.
-- No run-on sentences. If it needs a comma splice, it's too long.
+Roast a student's preposition error in ONE sentence (max 25 words). Use an ironic, pedantic comparison — the funnier and more absurd the better. Compare their mistake to something hilariously inappropriate: wrong cutlery at a royal banquet, a cat filing taxes, wearing a swimsuit to a funeral. The irony should be thick enough to spread on toast. Use **bold** for the correct preposition, *italics* for the wrong one. Never start with "To suggest" or "To [verb]." No stage directions in parentheses.
 
 ${contextHints.join("\n")}`,
     prompt: `The student chose "${wrong}" instead of "${correct}" in this sentence: "${sentence}"
