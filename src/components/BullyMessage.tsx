@@ -59,16 +59,18 @@ export default function BullyMessage({
     return () => controller.abort();
   }, [sentence, correct, wrong, mistakeCount, streak]);
 
-  if (error) {
-    return (
-      <div className="text-center py-4 animate-fade-in">
-        <p className="text-lg italic text-[var(--color-accent)]">
-          Good heavens. The word was &ldquo;{correct},&rdquo; not &ldquo;
-          {wrong}.&rdquo; One would have thought that much was obvious.
-        </p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!error) return;
+
+    const fallback = `Good heavens. The word was \u201c${correct},\u201d not \u201c${wrong}.\u201d One would have thought that much was obvious.`;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setText(fallback.slice(0, i));
+      if (i >= fallback.length) clearInterval(id);
+    }, 18);
+    return () => clearInterval(id);
+  }, [error, correct, wrong]);
 
   if (!text) {
     return (
