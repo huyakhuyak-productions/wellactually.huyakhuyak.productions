@@ -39,8 +39,16 @@ export default function Game({ topicId, cards }: GameProps) {
   );
   const allCardIds = useMemo(() => cards.map((c) => c.id), [cards]);
 
-  // Lazy init: loads from localStorage or creates fresh game with shuffled deck.
+  // Two-phase init: render with fresh state on server, then sync from
+  // localStorage after hydration to avoid SSR/client mismatch.
   const [game, setGame] = useState<GameData>(() => {
+    const state = initGame(topicId, allCardIds);
+    const [cardId, drawn] = drawCard(state, allCardIds);
+    return { state: drawn, cardId };
+  });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
     const validIds = new Set(allCardIds);
     let state = loadGame(topicId);
 
@@ -55,14 +63,14 @@ export default function Game({ topicId, cards }: GameProps) {
       }
     }
 
-    if (!state) {
-      state = initGame(topicId, allCardIds);
+    if (state) {
+      const [cardId, drawn] = drawCard(state, allCardIds);
+      saveGame(drawn);
+      setGame({ state: drawn, cardId });
     }
 
-    const [cardId, drawn] = drawCard(state, allCardIds);
-    saveGame(drawn);
-    return { state: drawn, cardId };
-  });
+    setHydrated(true);
+  }, [topicId, allCardIds]);
 
   const [feedback, setFeedback] = useState<FeedbackState>({ type: "none" });
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -150,9 +158,14 @@ export default function Game({ topicId, cards }: GameProps) {
   }, [selectedAnswer, advance]);
 
   const currentCard = cardMap.get(game.cardId);
-  if (!currentCard) {
-    reset();
-    return null;
+  if (!hydrated || !currentCard) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-sm italic text-[var(--color-text-muted)] animate-pulse">
+          The examiner arranges the papers…
+        </p>
+      </div>
+    );
   }
 
   return (
