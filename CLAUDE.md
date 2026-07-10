@@ -25,9 +25,15 @@ A pedantic British English teaching site. First feature: infinite preposition ca
 - Game state persisted to localStorage per topic
 
 ## Environment Variables
-- `OPENROUTER_API_KEY` — Required for AI bully responses
+- `OPENROUTER_API_KEY` — Required for AI bully responses. Locally lives in `.dev.vars` (gitignored); in production it's a Worker secret (`bunx wrangler secret put OPENROUTER_API_KEY`).
+- On Cloudflare Workers, `process.env` is only populated once request handling starts — never read env vars at module scope (see `src/lib/openrouter.ts`).
 
 ## Commands
 - `bun dev` — Start dev server
 - `bun run build` — Production build
 - `bun run lint` — ESLint
+- `bun run preview` — Build and run in workerd (the real Cloudflare runtime) on localhost:8787
+- `bun run deploy` — Build and deploy to Cloudflare Workers
+
+## Deployment
+Cloudflare Workers via the OpenNext adapter (`@opennextjs/cloudflare`). Config: `wrangler.jsonc` + `open-next.config.ts`. No R2/ISR caching — pages are static, dynamic bits are API routes. Keep `compatibility_date` at or below the newest date the local workerd binary supports, otherwise `preview` fails to start.
