@@ -66,6 +66,9 @@ export default function Game({ topicId, cards }: GameProps) {
     if (state) {
       const [cardId, drawn] = drawCard(state, allCardIds);
       saveGame(drawn);
+      // One-time post-hydration restore from localStorage; drawing a card is
+      // random and saves back to storage, so useSyncExternalStore can't apply.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setGame({ state: drawn, cardId });
     }
 
